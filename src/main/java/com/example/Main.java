@@ -8,7 +8,5 @@ public class Main {
             System.out.println("Argument on " + counter + " position: " + argument );
             counter++;
         }
-
-
     }
 }
