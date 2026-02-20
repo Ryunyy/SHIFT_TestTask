@@ -20,32 +20,32 @@ public class ArgumentChecker {
         CheckFlags();
     }
 
-    private boolean IsFewArguments(){
+    private void CheckArgumentsCount(){
         if(this.arguments.size() < 2) {
             this.errorMessage += "Error: Too few arguments! At least must be two!\n";
-            return true;
+            PrintUsageRules();
+            System.exit(1);
         }
-        return false;
     }
 
-    private boolean IsArgumentMissing(String argument, boolean enableLog){
+    private void CheckArgumentExistence(String argument, boolean enableLog){
         if(!this.arguments.contains(argument)){
             if(enableLog)
                 errorMessage += "Error: Required argument '" + argument + "' is missing!\n";
-            return true;
+            PrintUsageRules();
+            System.exit(1);
         }
-        return false;
     }
 
-    private boolean IsBothStatisticFlagsDetected(){
+    private void CheckBothStatisticFlags(){
         if(this.arguments.contains("-s") && this.arguments.contains("-f")) {
             this.errorMessage += "Error: Options '-s' and '-f' can not be entered together!\n";
-            return true;
+            PrintUsageRules();
+            System.exit(1);
         }
-        else return false;
     }
 
-    private boolean IsFlagOrderWrong() {
+    private void CheckFlagOrder() {
         int globalFlagsIndex = -1;
         for (String argument : this.arguments) {
             int localIndex = this.flags.indexOf(argument);
@@ -54,70 +54,74 @@ public class ArgumentChecker {
                     globalFlagsIndex = localIndex;
                 else {
                     this.errorMessage += "Error: Order of parameters is invalid!\n";
-                    return true;
+                    PrintUsageRules();
+                    System.exit(1);
                 }
         }
-        return false;
     }
 
-    private boolean IsParameterAfterArgumentMissing(String argument){ //checks if the <prefix> or <path> aren't found after -p or -o arguments respectively
-        boolean isParameterLost = false;
+    private void CheckParameterAfterArgumentMissing(String argument){ //checks if the <prefix> or <path> aren't found after -p or -o arguments respectively
         int indexOfArgument = this.arguments.indexOf(argument);
         if(indexOfArgument != -1) { // if option exist in arguments, if not - no need to check
             if (this.arguments.size() == (indexOfArgument+1) || this.flags.contains(this.arguments.get(indexOfArgument + 1))) { //and the next one IS IN the flag list (skipped path or prefix)
-                isParameterLost = true;
                 this.errorMessage += "Error: Parameter after argument '" + argument + "' is missing!\n";
+                PrintUsageRules();
+                System.exit(1);
             }
         }
-        return isParameterLost;
     }
 
-    private boolean IsInputFilesMissing(){
+    private void CheckInputFilesMissing(){
         int lastParameterIndex = this.arguments.size() - 1;
         String lastParameter = this.arguments.get(lastParameterIndex);
         String potentialOptionArgument = this.arguments.get(lastParameterIndex - 1);
-        if (lastParameter.matches("(?i).*[.]txt$") && !potentialOptionArgument.equals("-o") && !potentialOptionArgument.equals("-p")) // if the last argument ends with ".txt" with insensetive register
-            return false;
-        else {
+        if (!lastParameter.matches("(?i).*[.]txt$") || potentialOptionArgument.equals("-o") || potentialOptionArgument.equals("-p")) { // if the last argument ends with ".txt" with insensetive register
             this.errorMessage += "Error: No input files found. Must have at least one!\n";
-            return true;
+            PrintUsageRules();
+            System.exit(1);
         }
     }
 
-    private boolean IsUnknownArgumentsDetected() {
+    private void CheckUnknownArguments() {
         ArrayList<String> argumentsClone = (ArrayList<String>) this.arguments.clone();
-        for(int indexOfArgument = 0; indexOfArgument < argumentsClone.size();){
-            String argument = argumentsClone.get(indexOfArgument);
+        int inputFileAllowedIndex = 0;
+        for(int indexOfArgument = 0; indexOfArgument < this.arguments.size(); indexOfArgument++){
+            String argument = this.arguments.get(indexOfArgument);
             switch (argument){
                 case "-s":
                 case "-f":
                 case "-a":
                     argumentsClone.remove(argument);
+                    inputFileAllowedIndex = indexOfArgument + 1;
                     break;
                 case "-o" :
                 case "-p" :
-                    argumentsClone.remove(indexOfArgument);
-                    argumentsClone.remove(indexOfArgument);
-                    break;
-                default:
+                    argumentsClone.remove(argument);
                     indexOfArgument++;
+                    argument = this.arguments.get(indexOfArgument);
+                    argumentsClone.remove(argument);
+                    inputFileAllowedIndex = indexOfArgument + 1;
                     break;
             }
         }
-        while(!argumentsClone.isEmpty() && argumentsClone.get(argumentsClone.size() - 1).matches("(?i).*[.]txt$")){ // remove all .txt files from the end
-            argumentsClone.remove(argumentsClone.size() - 1);
+        inputFileAllowedIndex = argumentsClone.indexOf(this.arguments.get(inputFileAllowedIndex));
+        for(; inputFileAllowedIndex < argumentsClone.size(); ){
+            if(argumentsClone.get(inputFileAllowedIndex).matches("(?i).*[.]txt$")){
+                argumentsClone.remove(inputFileAllowedIndex); // remove all .txt files that after -p <prefix>
+            }
+            else
+                inputFileAllowedIndex++;
         }
-        if(argumentsClone.isEmpty())
-            return false;
-        else {
+        if(!argumentsClone.isEmpty()){
             errorMessage += "Error: Unknown arguments detected: ";
             errorMessage += String.join(" ", argumentsClone);
             errorMessage += "\n";
-            return true;
+            PrintUsageRules();
+            System.exit(1);
         }
     }
 
-    private boolean IsPrefixNameInvalid(){
+    private void CheckPrefixNameValidation(){
         int indexP = this.arguments.indexOf("-p"); // check if prefix contains \ / : * ? < > |
         boolean isPrefixNameInvalid = false;
         if(indexP != -1){
@@ -132,13 +136,15 @@ public class ArgumentChecker {
                     this.errorMessage += symbol;
                 }
             }
-            if(!isPrefixNameInvalid)
+            if(isPrefixNameInvalid) {
                 this.errorMessage += "\n";
+                PrintUsageRules();
+                System.exit(1);
+            }
         }
-        return isPrefixNameInvalid;
     }
 
-    private boolean IsPathUnreachable(){ // unreachable/prohibited path
+    private void CheckPath(){ // unreachable/prohibited path
         int indexO = this.arguments.indexOf("-o"); // mb move it to content filter?
         if(indexO != -1) {
             String stringPath = this.arguments.get(indexO + 1);
@@ -146,52 +152,35 @@ public class ArgumentChecker {
                 Path path = Paths.get(stringPath);
                 if(!Files.isDirectory(path)){
                     errorMessage += "Error: Entered <path> parameter '" + stringPath +"' is not a directory!\n";
-                    return true;
+                    PrintUsageRules();
+                    System.exit(1);
                 }
             } catch (InvalidPathException e){
                 errorMessage += "Error: Entered <path> parameter '" + stringPath + "' is not valid!\n";
-                return true;
+                PrintUsageRules();
+                System.exit(1);
             }
         }
-        return false;
     }
 
     private void CheckFlags(){ //mb rename all and do "CheckArgsCount" - like
-        if(this.IsFewArguments()) { // exit with reason: too few arguments
-            PrintUsageRules();
-            System.exit(1);
-        }
-        if((this.IsArgumentMissing("-s", false) && this.IsArgumentMissing("-f", false))){ // exit with reason: no statistic option found
-            this.errorMessage += "Error: Required statistic option is missing!\n";
-            PrintUsageRules();
-            System.exit(1);
-        }
-        if(this.IsBothStatisticFlagsDetected() // exit with reason: invalid structure of argument input
-                || this.IsFlagOrderWrong()
-                || this.IsParameterAfterArgumentMissing("-o")
-                || this.IsParameterAfterArgumentMissing("-p")
-                || this.IsUnknownArgumentsDetected()){
-            PrintUsageRules();
-            System.exit(1);
-        }
-        if(this.IsInputFilesMissing()){ // exit with reason: no input files detected
-            PrintUsageRules();
-            System.exit(1);
-        }
-        if(this.IsPrefixNameInvalid()) { // exit with reason: invalid <prefix> name
-            PrintUsageRules();
-            System.exit(1);
-        }
-        if(this.IsPathUnreachable()) { // exit with reason: invalid <prefix> name
-            PrintUsageRules();
-            System.exit(1);
-        }
+        CheckArgumentsCount(); // exit with reason: too few arguments
+        CheckBothStatisticFlags(); // exit with reason: invalid structure of argument input
+        CheckFlagOrder();
+        CheckParameterAfterArgumentMissing("-o");
+        CheckParameterAfterArgumentMissing("-p");
+        CheckUnknownArguments();
+        CheckInputFilesMissing(); // exit with reason: no input files detected
+        CheckPrefixNameValidation(); // exit with reason: invalid <prefix> name
+        CheckPath();
+        //CheckInputFilesExistence
+        //Check
     }
 
     private void PrintUsageRules(){
-        this.errorMessage += "\nUsage: {-s | -f} [-a] [-o <path>] [-p <prefix>] <file1.txt> <file2.txt> ...\n\n" +
+        this.errorMessage += "\nUsage: [-s | -f] [-a] [-o <path>] [-p <prefix>] <file1.txt> <file2.txt> ...\n\n" +
                 "Options supported:\n" +
-                "\t-s/-f | Show short (for '-s') or full (for '-f') statistic.\n" + //mb
+                "\t-s/-f | Show short (for '-s') or full (for '-f') statistic. Short by default.\n" + //mb
                 "\t-a | Append results to output files. Overwrite by default.\n" +
                 "\t-o <path> | Select <path> as the output directory for files.\n" +
                 "\t-p <prefix> | Add <prefix> to the output files. E.g. -p out- -> out-strings.txt out-integers.txt etc. Prohibited symbols: \\ / : * ? < > |\n";
