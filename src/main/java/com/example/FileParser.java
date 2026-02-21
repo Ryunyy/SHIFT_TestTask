@@ -4,18 +4,18 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class FileParser {
-    String filename;
-    BufferedReader bdReader;
-    ArrayList<String> fileContent = new ArrayList<>();
+    private String filename;
+    private BufferedReader bdReader;
+    private ArrayList<String> fileContent = new ArrayList<>();
 
     public FileParser(String filename){
         this.filename = filename;
-
+        FileExtractor();
     }
 
     private void OpenFile(){
         try {
-            this.bdReader = new BufferedReader(new FileReader(new File(filename)));
+            this.bdReader = new BufferedReader(new FileReader(new File(this.filename)));
         } catch (FileNotFoundException e) {
             System.out.println("Error: FileParser.java - OpenFile function fail with reason:\n" + e);
             System.exit(1);
@@ -39,7 +39,7 @@ public class FileParser {
             try {
                 line = this.bdReader.readLine();
                 if(line != null)
-                    fileContent.add(line);
+                    this.fileContent.add(line);
                 else
                     flag = false;
             } catch (IOException e) {
