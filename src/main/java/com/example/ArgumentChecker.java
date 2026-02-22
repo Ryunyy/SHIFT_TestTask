@@ -13,11 +13,11 @@ public class ArgumentChecker {
     //array list of input arguments
     private ArrayList<String> arguments;
     //array list of input files
-    ArrayList<String> inputFiles = new ArrayList<>();
-    private String outputPath = "";
+    private ArrayList<String> inputFiles = new ArrayList<>();
+    private String outputPath = System.getProperty("user.dir").concat("\\out\\artifacts\\util_jar\\");
     private String filePrefix = "";
-    boolean fullStatistic = false; // true if -f, false is -s
-    boolean overwriteFiles = true; // false if -a
+    private boolean fullStatistic = false; // true if -f, false is -s
+    private boolean overwriteFiles = true; // false if -a
     //message to be shown when errors occurred
     private String errorMessage = "";
     //index of first input file
@@ -41,10 +41,15 @@ public class ArgumentChecker {
     }
 
     private void setOutputPath(String outputPath) {
-        if(isPathValid(outputPath))
+        if(outputPath.equals(""))
+            outputPath = this.outputPath;
+        if(isPathValid(outputPath)) {
+            if (!outputPath.endsWith("\\"))
+                outputPath += "\\";
             this.outputPath = outputPath;
+        }
         else{
-            PrintUsageRules();
+            printUsageRules();
             System.exit(1);
         }
     }
@@ -57,7 +62,7 @@ public class ArgumentChecker {
         if(isPrefixNameValid(filePrefix))
             this.filePrefix = filePrefix;
         else{
-            PrintUsageRules();
+            printUsageRules();
             System.exit(1);
         }
     }
@@ -81,7 +86,7 @@ public class ArgumentChecker {
     private void argumentSplitter(){
         if(this.arguments.isEmpty()) {
             this.errorMessage += "Error: Too few arguments! At least must be one!\n";
-            PrintUsageRules();
+            printUsageRules();
             System.exit(1);
         }
         extractStatisticFlag();
@@ -92,11 +97,11 @@ public class ArgumentChecker {
         checkUnknownArguments();
         setInputFiles(extractInputFiles());
 
-        System.out.println("Full statistic: " + isFullStatistic());
-        System.out.println("Overwrite files: " + isOverwriteFiles());
-        System.out.println("Output path: " + getOutputPath());
-        System.out.println("Output files prefix: " + getFilePrefix());
-        System.out.println("Input files: " + getInputFiles());
+//        System.out.println("Full statistic: " + isFullStatistic());
+//        System.out.println("Overwrite files: " + isOverwriteFiles());
+//        System.out.println("Output path: " + getOutputPath());
+//        System.out.println("Output files prefix: " + getFilePrefix());
+//        System.out.println("Input files: " + getInputFiles());
     }
 
     private boolean isArgumentExist(String argument, boolean enableLog){
@@ -147,7 +152,7 @@ public class ArgumentChecker {
                     globalFlagsIndex = localIndex;
                 else {
                     this.errorMessage += "Error: Order of parameters is invalid!\n";
-                    PrintUsageRules();
+                    printUsageRules();
                     System.exit(1);
                 }
         }
@@ -186,7 +191,7 @@ public class ArgumentChecker {
                     unknownArguments += this.arguments.get(index) + " ";
             }
             errorMessage += "Error: Unknown arguments detected: " + String.join(" ", unknownArguments) + "\n";
-            PrintUsageRules();
+            printUsageRules();
             System.exit(1);
         }
     }
@@ -204,7 +209,7 @@ public class ArgumentChecker {
         }
         if(!error.isEmpty()){
             this.errorMessage += error;
-            PrintUsageRules();
+            printUsageRules();
             System.exit(1);
         }
     }
@@ -214,7 +219,7 @@ public class ArgumentChecker {
             setFullStatistic(true);
         if(isArgumentExist("-s", false) && isFullStatistic()) {
             this.errorMessage += "Error: Options '-s' and '-f' can not be entered together!\n";
-            PrintUsageRules();
+            printUsageRules();
             System.exit(1);
         }
     }
@@ -224,7 +229,7 @@ public class ArgumentChecker {
             int indexOfArgument = this.arguments.indexOf(argument);
             if (this.arguments.size() == (indexOfArgument + 1) || this.flags.contains(this.arguments.get(indexOfArgument + 1))) { //and the next one IS IN the flag list (skipped path or prefix)
                 this.errorMessage += "Error: Parameter after argument '" + argument + "' is missing!\n";
-                PrintUsageRules();
+                printUsageRules();
                 System.exit(1);
             }
             return this.arguments.get(indexOfArgument + 1);
@@ -250,7 +255,7 @@ public class ArgumentChecker {
             }
             if(!error.isEmpty()){
                 this.errorMessage += error;
-                PrintUsageRules();
+                printUsageRules();
                 System.exit(1);
             }
             inputFiles.add(filePath);
@@ -258,7 +263,7 @@ public class ArgumentChecker {
         return inputFiles;
     }
 
-    private void PrintUsageRules(){
+    private void printUsageRules(){
         this.errorMessage += "\nUsage: [-s | -f] [-a] [-o <path>] [-p <prefix>] <file1.txt> <file2.txt> ...\n\n" +
                 "Options supported:\n" +
                 "\t-s/-f | Show short (for '-s') or full (for '-f') statistic. Short by default.\n" + //mb

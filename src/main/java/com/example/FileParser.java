@@ -2,59 +2,38 @@ package com.example;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class FileParser {
     private String filename;
-    private BufferedReader bdReader;
+    private Scanner scanner;
     private ArrayList<String> fileContent = new ArrayList<>();
 
     public FileParser(String filename){
         this.filename = filename;
-        FileExtractor();
+        fileExtractor();
     }
 
-    private void OpenFile(){
+    private void fileExtractor(){
         try {
-            this.bdReader = new BufferedReader(new FileReader(new File(this.filename)));
+            this.scanner = new Scanner(new FileReader(new File(this.filename)));
+            while(this.scanner.hasNextLine())
+                this.fileContent.add(this.scanner.nextLine());
         } catch (FileNotFoundException e) {
-            System.out.println("Error: FileParser.java - OpenFile function fail with reason:\n" + e);
+            System.out.println("Error: FileParser.java - File are not found!\n");
+            System.exit(1);
+        } catch(Exception e){
+            System.out.println("Error: FileParser.java - Errors occurred when trying to read file " + this.filename + ": " + e.getMessage() + "\n");
             System.exit(1);
         }
+        this.scanner.close();
     }
 
-    private void CloseFile(){
-        try {
-            this.bdReader.close();
-        } catch (IOException e) {
-            System.out.println("Error: FileParser.java - CloseFile function fail with reason:\n" + e);
-            System.exit(1);
-        }
-    }
-
-    public void FileExtractor(){
-        OpenFile();
-        String line;
-        boolean flag = true;
-        while(flag){
-            try {
-                line = this.bdReader.readLine();
-                if(line != null)
-                    this.fileContent.add(line);
-                else
-                    flag = false;
-            } catch (IOException e) {
-                System.out.println("Error: FileParser.java - FileExtractor function fail with reason:\n" + e);
-                System.exit(1);
-            }
-        }
-        CloseFile();
-    }
-
-    public ArrayList<String> GetFileContent(){
+    public ArrayList<String> getFileContent(){
         return this.fileContent;
     }
 
-    public void PrintFileContent(){
+    public void printFileContent(){
         System.out.println(this.fileContent);
     }
 }
