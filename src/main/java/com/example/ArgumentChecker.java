@@ -14,7 +14,7 @@ public class ArgumentChecker {
     private ArrayList<String> arguments;
     //array list of input files
     private ArrayList<String> inputFiles = new ArrayList<>();
-    private String outputPath = System.getProperty("user.dir").concat("\\out\\artifacts\\util_jar\\");
+    private String outputPath = System.getProperty("user.dir");
     private String filePrefix = "";
     private boolean fullStatistic = false; // true if -f, false is -s
     private boolean overwriteFiles = true; // false if -a

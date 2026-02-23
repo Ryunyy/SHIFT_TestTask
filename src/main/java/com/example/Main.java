@@ -111,21 +111,27 @@ public class Main {
         System.out.println("\tFloats: " + floatsCounter);
 
         if(arguments.isFullStatistic()) {
-            System.out.println("\n=====INTEGERS STATISTIC=====");
-            System.out.println("\tMinimal Integer: " + intMinVal);
-            System.out.println("\tMaximum Integer: " + intMaxVal);
-            System.out.println("\tMean Integer: " + intMeanVal);
-            System.out.println("\tSum of all Integer: " + intSum);
+            if(filter.integers.getArrayListSize() > 0) {
+                System.out.println("\n=====INTEGERS STATISTIC=====");
+                System.out.println("\tMinimal Integer: " + intMinVal);
+                System.out.println("\tMaximum Integer: " + intMaxVal);
+                System.out.println("\tMean Integer: " + intMeanVal);
+                System.out.println("\tSum of all Integer: " + intSum);
+            }
 
-            System.out.println("\n=====FLOATS STATISTIC=====");
-            System.out.println("\tMinimal Float: " + floatMinVal);
-            System.out.println("\tMaximum Float: " + floatMaxVal);
-            System.out.println("\tMean Float: " + floatMeanVal);
-            System.out.println("\tSum of all Float: " + floatSum);
+            if(filter.floats.getArrayListSize() > 0) {
+                System.out.println("\n=====FLOATS STATISTIC=====");
+                System.out.println("\tMinimal Float: " + floatMinVal);
+                System.out.println("\tMaximum Float: " + floatMaxVal);
+                System.out.println("\tMean Float: " + floatMeanVal);
+                System.out.println("\tSum of all Float: " + floatSum);
+            }
 
-            System.out.println("\n=====STRINGS STATISTIC=====");
-            System.out.println("\tShortest string: " + shortest);
-            System.out.println("\tLongest string: " + longest);
+            if(filter.strings.getArrayListSize() > 0) {
+                System.out.println("\n=====STRINGS STATISTIC=====");
+                System.out.println("\tShortest string: " + shortest);
+                System.out.println("\tLongest string: " + longest);
+            }
         }
     }
 }
